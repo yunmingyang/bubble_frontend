@@ -11,7 +11,7 @@
     <el-divider></el-divider>
     <el-table :data="tableData" style="width: 100%" :row-class-name="tableRowClassName">
       <el-table-column type="index" width="50"></el-table-column>
-      <el-table-column align="center" label="待办事项" prop="title"></el-table-column>
+      <el-table-column align="center" label="待办事项" prop="content"></el-table-column>
       <el-table-column align="right" label="操作">
         <template slot-scope="scope">
           <el-button
@@ -51,8 +51,8 @@ export default {
   },
   mounted() {
     this.axios
-      .get("/v1/todo")
-      .then(response => (this.tableData = response.data));
+      .get("/v1/list")
+      .then(response => (this.tableData = response.data.data));
   },
   methods: {
     tableRowClassName({ row }) {
@@ -64,14 +64,15 @@ export default {
     },
     getTodoList() {
       this.axios
-        .get("/v1/todo")
-        .then(response => (this.tableData = response.data));
+        .get("/v1/list")
+        .then(response => (this.tableData = response.data.data));
     },
     handleEdit(index, row) {
       let messageSuffix = row.status ? " 置为未完成" : " 置为已完成";
       this.axios
-        .put("/v1/todo/" + row.id, {
-          status: !row.status
+        .post("/v1/update", {
+          status: !row.status,
+          id: row.id
         })
         .then(() => {
           this.tableData[index].status = !row.status;
@@ -84,7 +85,7 @@ export default {
         });
     },
     handleDelete(index, id) {
-      this.axios.delete("/v1/todo/" + id).then(() => {
+      this.axios.post("/v1/delete", {"id": id}).then(() => {
         this.tableData.splice(index, 1);
         this.$message({
           showClose: true,
@@ -97,8 +98,8 @@ export default {
     handleAdd() {
       if (this.newTitle != "") {
         this.axios
-          .post("/v1/todo", {
-            title: this.newTitle
+          .post("/v1/add", {
+            content: this.newTitle
           })
           .then(() => {
             this.getTodoList();
